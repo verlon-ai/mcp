@@ -38,7 +38,10 @@ jobs:
 
       # Trusted publishing (OIDC) needs npm >= 11.5; Node 22 bundles an older npm
       - name: Update npm
-        run: npm install -g npm@latest
+        run: |
+          npm install -g npm@latest
+          echo "npm on PATH: $(which npm) → $(npm -v)"
+          echo "OIDC env present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
 
       - name: Install dependencies
         run: npm install
