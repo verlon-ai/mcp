@@ -1,0 +1,54 @@
+name: Publish to npm
+
+# Publishes via npm Trusted Publishing (OIDC): the workflow proves its
+# identity to npm directly — no stored token — and npm attaches provenance
+# tying the tarball to this public repo + workflow run. The trusted
+# publisher is configured on the @verlon-ai/mcp package settings
+# (GitHub Actions / verlon-ai / mcp / publish.yml).
+#
+# Release flow: bump versions in lockstep (package.json, server.json x2,
+# src/server.ts), merge to main, then push a tag:
+#   git tag v0.3.1 && git push origin v0.3.1
+# The MCP Registry publish (mcp-publisher) stays manual — run
+# `npm run publish:mcp` AFTER npm confirms the new version, since the
+# registry validates the npm version exists.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # required for --provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing (OIDC) needs npm >= 11.5; Node 22 bundles an older npm
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Tag matches package version
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          [ "$PKG" = "$TAG" ] || { echo "::error::tag $GITHUB_REF_NAME does not match package.json version $PKG"; exit 1; }
+
+      - name: Test
+        run: npm test
+
+      - name: Publish (trusted publishing, provenance automatic)
+        run: npm publish --access public
