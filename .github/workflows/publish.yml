@@ -29,10 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No registry-url here: setup-node's registry-url writes an .npmrc
+      # auth-token reference with a placeholder value, which makes npm skip
+      # the OIDC trusted-publishing exchange and publish unauthenticated.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: 'https://registry.npmjs.org'
 
       # Trusted publishing (OIDC) needs npm >= 11.5; Node 22 bundles an older npm
       - name: Update npm
