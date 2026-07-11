@@ -55,5 +55,11 @@ jobs:
       - name: Test
         run: npm test
 
+      # Build BEFORE publish: npm validates the manifest (including bin paths)
+      # before prepublishOnly runs — with no dist/ present it strips the bin
+      # entry from the published package, breaking npx for consumers.
+      - name: Build
+        run: npm run build
+
       - name: Publish (trusted publishing, provenance automatic)
-        run: npm publish --access public
+        run: npm publish --access public --loglevel http
