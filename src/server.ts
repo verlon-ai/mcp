@@ -6,7 +6,7 @@ import { registerListLogs } from './tools/list-logs.js';
 import { registerGetRecommendations } from './tools/get-recommendations.js';
 import { registerListExperiments } from './tools/list-experiments.js';
 
-export const VERLON_MCP_VERSION = '0.3.1';
+export const VERLON_MCP_VERSION = '0.3.2';
 
 export interface ServerOptions {
   /**
