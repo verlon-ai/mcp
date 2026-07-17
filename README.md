@@ -1,8 +1,12 @@
 # @verlon-ai/mcp
 
+[![npm version](https://img.shields.io/npm/v/%40verlon-ai%2Fmcp)](https://www.npmjs.com/package/@verlon-ai/mcp)
+[![license](https://img.shields.io/npm/l/%40verlon-ai%2Fmcp)](./LICENSE)
+[![CI](https://github.com/verlon-ai/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/verlon-ai/mcp/actions/workflows/ci.yml)
+
 Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (gates, logs, recommendations, experiments) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
 
-**Status:** 0.3.1 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 5 read-only tools (`list_gates`, `get_gate`, `list_logs`, `get_recommendations`, `list_experiments`). Write tools (`create_gate`, `update_gate`, `run_chat`, `start_experiment`) gated behind `--enable-writes` land in a future release.
+**Status:** 0.3.2 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 5 read-only tools (`list_gates`, `get_gate`, `list_logs`, `get_recommendations`, `list_experiments`). Write tools (`create_gate`, `update_gate`, `run_chat`, `start_experiment`) gated behind `--enable-writes` land in a future release.
 
 ## Install
 
