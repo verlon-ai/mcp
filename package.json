@@ -54,7 +54,7 @@
   ],
   "author": "Micah Nettey",
   "license": "MIT",
-  "homepage": "https://docs.verlon.ai",
+  "homepage": "https://verlon.ai",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@verlon-ai/admin": "^1.2.0",
