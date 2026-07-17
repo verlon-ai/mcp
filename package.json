@@ -1,6 +1,6 @@
 {
   "name": "@verlon-ai/mcp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "mcpName": "ai.verlon/mcp",
   "type": "module",
   "description": "Model Context Protocol server for Verlon AI. Exposes gates, logs, recommendations, and experiments as MCP tools so coding agents (Claude Code, Cursor, Cline, any MCP-compatible client) can inspect and manage Verlon resources natively. Read-only by default; write tools require explicit --enable-writes opt-in. Agent integration protocol: https://verlon.ai/AGENTS.md",
@@ -54,7 +54,7 @@
   ],
   "author": "Micah Nettey",
   "license": "MIT",
-  "homepage": "https://docs.verlon.ai",
+  "homepage": "https://verlon.ai",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@verlon-ai/admin": "^1.2.0",
