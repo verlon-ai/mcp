@@ -5,8 +5,10 @@ import { registerGetGate } from './tools/get-gate.js';
 import { registerListLogs } from './tools/list-logs.js';
 import { registerGetRecommendations } from './tools/get-recommendations.js';
 import { registerListExperiments } from './tools/list-experiments.js';
+import { registerListModels } from './tools/list-models.js';
+import { registerSwitchModel } from './tools/switch-model.js';
 
-export const VERLON_MCP_VERSION = '0.3.2';
+export const VERLON_MCP_VERSION = '0.4.0';
 
 export interface ServerOptions {
   /**
@@ -20,7 +22,7 @@ export interface ServerOptions {
   enableWrites?: boolean;
 }
 
-export function createServer(_opts: ServerOptions = {}): McpServer {
+export function createServer(opts: ServerOptions = {}): McpServer {
   const server = new McpServer({
     name: 'verlon',
     version: VERLON_MCP_VERSION,
@@ -32,8 +34,14 @@ export function createServer(_opts: ServerOptions = {}): McpServer {
   registerListLogs(server);
   registerGetRecommendations(server);
   registerListExperiments(server);
+  registerListModels(server);
 
-  // Future: if (_opts.enableWrites) { registerCreateGate(server); ... }
+  // Write tools — explicit opt-in only. switch_model is deliberately
+  // the narrowest possible first write (one reversible field); the
+  // broader create/update/delete surface stays in MCP Phase D.
+  if (opts.enableWrites) {
+    registerSwitchModel(server);
+  }
 
   return server;
 }
