@@ -6,7 +6,7 @@
 
 Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (gates, logs, recommendations, experiments) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
 
-**Status:** 0.3.2 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 5 read-only tools (`list_gates`, `get_gate`, `list_logs`, `get_recommendations`, `list_experiments`). Write tools (`create_gate`, `update_gate`, `run_chat`, `start_experiment`) gated behind `--enable-writes` land in a future release.
+**Status:** 0.4.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 6 read-only tools (`list_gates`, `get_gate`, `list_logs`, `get_recommendations`, `list_experiments`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`. The broader write surface (`create_gate`, `update_gate`, `run_chat`, `start_experiment`) lands in a future release behind the same flag.
 
 ## Install
 
@@ -56,7 +56,7 @@ The server speaks MCP over stdio. Spawn `npx -y @verlon-ai/mcp` with `VERLON_API
 
 ## Tools
 
-All v0.3.x tools are **read-only** — see [Security note](#security-note) for the rationale and the planned write-tool opt-in.
+The default tool set is **read-only** — see [Security note](#security-note) for the rationale. Write tools register only when the server starts with `--enable-writes`.
 
 | Tool | Inputs | What it returns |
 |---|---|---|
@@ -65,6 +65,13 @@ All v0.3.x tools are **read-only** — see [Security note](#security-note) for t
 | `list_logs` | `gate?`, `since?` (ISO 8601), `success?`, `limit?` (1-100, default 20) | Recent request logs — timestamp, gate, model, cost, latency, success/failure |
 | `get_recommendations` | `gateId` (UUID) | Cortex intelligence report — themes, drift detection, optimization recommendations. `{ report: null }` when no run has been produced yet |
 | `list_experiments` | `gateId?`, `status?`, `projectId?` | Experiments (shadow + split) — id, name, status, test type, variants, goal metric, configuration |
+| `list_models` | `provider?` (`openai`, `anthropic`, `google`, `mistral`, …) | Chat models a gate can route to, with live pricing (USD per 1M tokens) and capability scores |
+
+### Write tools (`--enable-writes` only)
+
+| Tool | Inputs | What it does |
+|---|---|---|
+| `switch_model` | `model` (id from `list_models`), `gateId?` | Switches which model a coding gate routes to. Takes effect on the next turn of any running session, no restart. With `gateId` omitted, targets the account's Claude Code connector gate. Idempotent; the change is one reversible field. |
 
 ## Configuration
 
@@ -77,12 +84,12 @@ All v0.3.x tools are **read-only** — see [Security note](#security-note) for t
 
 | Flag | Purpose |
 |---|---|
-| `--enable-writes` | Register write-capable tools. **Phase 3+ feature.** In 0.1.x this flag is accepted but no write tools exist yet. Default is read-only — a misaligned agent can't accidentally destroy resources. |
+| `--enable-writes` | Register write-capable tools (`switch_model` today). Default is read-only — a misaligned agent can't accidentally destroy resources. |
 | `--help`, `-h` | Print usage. |
 
 ## Security note
 
-Read-only by default is a deliberate choice. The MCP client (Claude Code, Cursor, etc.) sees this server's tools and may invoke them autonomously when a user's request makes them seem relevant. A read-only default means even a misaligned agent can only inspect your account, not modify it. Opt in to write tools (`--enable-writes`, Phase 3+) only after you understand the implications.
+Read-only by default is a deliberate choice. The MCP client (Claude Code, Cursor, etc.) sees this server's tools and may invoke them autonomously when a user's request makes them seem relevant. A read-only default means even a misaligned agent can only inspect your account, not modify it. Opt in to write tools (`--enable-writes`) only after you understand the implications. The only write tool today is `switch_model`, deliberately the narrowest possible first write: one reversible field on one gate. Creating, updating, or deleting resources is not yet exposed.
 
 ## Development
 
@@ -110,7 +117,7 @@ Then:
 
 ```bash
 # 1. Merge the bump to main (CI enforces the lockstep), then tag:
-git tag v0.3.1 && git push origin v0.3.1
+git tag v0.4.1 && git push origin v0.4.1
 # The publish workflow runs `npm publish --provenance` automatically.
 
 # Wait ~30s for npm CDN; verify:
