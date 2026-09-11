@@ -8,7 +8,7 @@ import { registerListExperiments } from './tools/list-experiments.js';
 import { registerListModels } from './tools/list-models.js';
 import { registerSwitchModel } from './tools/switch-model.js';
 
-export const VERLON_MCP_VERSION = '0.4.0';
+export const VERLON_MCP_VERSION = '0.4.1';
 
 export interface ServerOptions {
   /**
