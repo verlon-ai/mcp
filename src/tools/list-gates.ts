@@ -16,7 +16,8 @@ export function registerListGates(server: McpServer): void {
       title: 'List Verlon Gates',
       description:
         "List all gates in the authenticated Verlon AI account. Each gate's summary " +
-        '(id, name, description, primary model, task type, creation date) is returned ' +
+        '(id, name, description, primary model, task type, connector, whether it is ' +
+        'the default gate for `verlon connect`, creation date) is returned ' +
         'as JSON. Read-only.',
       inputSchema: {},
       annotations: {
@@ -36,6 +37,13 @@ export function registerListGates(server: McpServer): void {
           model: g.model,
           taskType: g.taskType,
           taskSubtype: g.taskSubtype ?? null,
+          // How traffic reaches the gate ('sdk', 'claude-code', ...)
+          // and whether `verlon connect` treats it as the default for
+          // its connector — needed when helping a user pick a gate.
+          connector: (g as { connector?: string }).connector ?? 'sdk',
+          isConnectDefault: Boolean(
+            (g as { isConnectDefault?: boolean }).isConnectDefault
+          ),
           createdAt:
             g.createdAt instanceof Date
               ? g.createdAt.toISOString()
