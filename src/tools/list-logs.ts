@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { createAdminClient } from '../lib/client.js';
+import { envClient, type ClientFor } from '../lib/client.js';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -19,7 +19,10 @@ const listLogsInputSchema = {
  * (true/false), `limit` (1..100, default 20). Returns log rows as JSON.
  * Read-only.
  */
-export function registerListLogs(server: McpServer): void {
+export function registerListLogs(
+  server: McpServer,
+  client: ClientFor = envClient
+): void {
   // See get-gate.ts for why this is cast — TS2589 workaround for the
   // SDK's deep generic inference around non-empty inputSchema.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,11 +46,11 @@ export function registerListLogs(server: McpServer): void {
       since?: string;
       success?: boolean;
       limit?: number;
-    }) => {
+    }, extra: unknown) => {
       const { gate, since, success, limit } = args;
       const effectiveLimit = limit ?? DEFAULT_LIMIT;
       try {
-        const admin = createAdminClient();
+        const admin = client(extra);
         const logs = await admin.logs.list({
           gate,
           since,

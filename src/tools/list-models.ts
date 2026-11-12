@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { envBaseUrl } from '../lib/client.js';
 
-const DEFAULT_BASE_URL = 'https://api.verlon.ai';
 
 const listModelsInputSchema = {
   provider: z.string().optional(),
@@ -21,7 +21,10 @@ interface RegistryModel {
  * to, from the live registry (public endpoint, no auth). Companion to
  * `switch_model`: the calling model uses this to name a valid id.
  */
-export function registerListModels(server: McpServer): void {
+export function registerListModels(
+  server: McpServer,
+  baseUrlFor: () => string = envBaseUrl
+): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (server.registerTool as any)(
     'list_models',
@@ -38,9 +41,7 @@ export function registerListModels(server: McpServer): void {
       },
     },
     async ({ provider }: { provider?: string }) => {
-      const baseUrl = (
-        process.env.VERLON_BASE_URL || DEFAULT_BASE_URL
-      ).replace(/\/+$/, '');
+      const baseUrl = baseUrlFor().replace(/\/+$/, '');
       try {
         const res = await fetch(`${baseUrl}/v1/registry`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

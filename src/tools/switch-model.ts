@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { createAdminClient } from '../lib/client.js';
+import { envClient, type ClientFor } from '../lib/client.js';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -29,7 +29,10 @@ interface ConnectorGate {
  * paths (`verlon switch`, the dashboard) remain primary; this exists
  * so "switch my model to gpt-4o" works conversationally.
  */
-export function registerSwitchModel(server: McpServer): void {
+export function registerSwitchModel(
+  server: McpServer,
+  client: ClientFor = envClient
+): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (server.registerTool as any)(
     'switch_model',
@@ -48,14 +51,14 @@ export function registerSwitchModel(server: McpServer): void {
         openWorldHint: true,
       },
     },
-    async ({ model, gateId }: { model: string; gateId?: string }) => {
+    async ({ model, gateId }: { model: string; gateId?: string }, extra: unknown) => {
       if (gateId && !UUID_RE.test(gateId)) {
         return errorResult(
           `Invalid gateId: "${gateId}" is not a UUID. Omit it to use your Claude Code connector gate.`
         );
       }
       try {
-        const admin = createAdminClient();
+        const admin = client(extra);
 
         let targetId = gateId;
         if (!targetId) {

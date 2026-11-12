@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { createAdminClient } from '../lib/client.js';
+import { envClient, type ClientFor } from '../lib/client.js';
 
 /**
  * Register the `list_gates` tool — the Phase 1 read-only entry point.
@@ -9,7 +9,10 @@ import { createAdminClient } from '../lib/client.js';
  * (SEP-1303), API failures surface as `isError: true` text content so
  * the calling model can self-correct, not as protocol-level errors.
  */
-export function registerListGates(server: McpServer): void {
+export function registerListGates(
+  server: McpServer,
+  client: ClientFor = envClient
+): void {
   server.registerTool(
     'list_gates',
     {
@@ -25,9 +28,9 @@ export function registerListGates(server: McpServer): void {
         openWorldHint: true,
       },
     },
-    async () => {
+    async (_args: unknown, extra: unknown) => {
       try {
-        const admin = createAdminClient();
+        const admin = client(extra);
         const gates = await admin.gates.list();
 
         const summary = gates.map((g) => ({
