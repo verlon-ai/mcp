@@ -6,7 +6,7 @@
 
 Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (gates, logs, models) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
 
-**Status:** 0.5.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 4 read-only tools (`list_gates`, `get_gate`, `list_logs`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`. The broader write surface (`create_gate`, `update_gate`, `run_chat`) lands in a future release behind the same flag.
+**Status:** 0.6.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 4 read-only tools (`list_gates`, `get_gate`, `list_logs`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`. The broader write surface (`create_gate`, `update_gate`, `run_chat`) lands in a future release behind the same flag.
 
 ## Install
 

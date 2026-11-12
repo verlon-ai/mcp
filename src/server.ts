@@ -7,7 +7,7 @@ import { registerListModels } from './tools/list-models.js';
 import { registerSwitchModel } from './tools/switch-model.js';
 import { envBaseUrl, envClient, type ClientFor } from './lib/client.js';
 
-export const VERLON_MCP_VERSION = '0.5.0';
+export const VERLON_MCP_VERSION = '0.6.0';
 
 export interface ServerOptions {
   /**
