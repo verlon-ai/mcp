@@ -16,10 +16,10 @@ Usage:
   verlon-mcp [--enable-writes]
 
 Flags:
-  --enable-writes   Register write-capable tools (create/update/delete gates,
-                    run chat, start experiment). Omit for read-only operation
-                    (the safe default; a misaligned agent can't destroy
-                    resources). Phase 3+ feature; ignored in 0.1.x.
+  --enable-writes   Register the write tools (today switch_model, which
+                    changes one gate's model). Omit for read-only operation
+                    (the safe default; a misaligned agent can't change
+                    resources).
   --help, -h        Show this message.
 
 Environment:

@@ -3,8 +3,6 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { registerListGates } from './tools/list-gates.js';
 import { registerGetGate } from './tools/get-gate.js';
 import { registerListLogs } from './tools/list-logs.js';
-import { registerGetRecommendations } from './tools/get-recommendations.js';
-import { registerListExperiments } from './tools/list-experiments.js';
 import { registerListModels } from './tools/list-models.js';
 import { registerSwitchModel } from './tools/switch-model.js';
 
@@ -12,12 +10,9 @@ export const VERLON_MCP_VERSION = '0.4.1';
 
 export interface ServerOptions {
   /**
-   * When true, register the write-capable tools (create/update/delete
-   * gates, run chat, start experiment). Default false — read-only.
-   * Wired through from the `--enable-writes` CLI flag.
-   *
-   * Phase 1: no write tools exist yet, so this flag is accepted but
-   * doesn't gate anything. Write tools land in Phase 3.
+   * When true, register the write tools (today `switch_model`).
+   * Default false — read-only. Wired through from the
+   * `--enable-writes` CLI flag.
    */
   enableWrites?: boolean;
 }
@@ -32,8 +27,6 @@ export function createServer(opts: ServerOptions = {}): McpServer {
   registerListGates(server);
   registerGetGate(server);
   registerListLogs(server);
-  registerGetRecommendations(server);
-  registerListExperiments(server);
   registerListModels(server);
 
   // Write tools — explicit opt-in only. switch_model is deliberately
