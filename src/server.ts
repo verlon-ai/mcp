@@ -6,7 +6,7 @@ import { registerListLogs } from './tools/list-logs.js';
 import { registerListModels } from './tools/list-models.js';
 import { registerSwitchModel } from './tools/switch-model.js';
 
-export const VERLON_MCP_VERSION = '0.4.1';
+export const VERLON_MCP_VERSION = '0.5.0';
 
 export interface ServerOptions {
   /**
