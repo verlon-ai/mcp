@@ -1,48 +1,16 @@
-#!/usr/bin/env node
-import { runStdio } from './server.js';
-
-function parseArgs(argv: string[]): { enableWrites: boolean; help: boolean } {
-  return {
-    enableWrites: argv.includes('--enable-writes'),
-    help: argv.includes('--help') || argv.includes('-h'),
-  };
-}
-
-function printHelp(): void {
-  process.stderr.write(
-    `@verlon-ai/mcp — Model Context Protocol server for Verlon AI
-
-Usage:
-  verlon-mcp [--enable-writes]
-
-Flags:
-  --enable-writes   Register the write tools (today switch_model, which
-                    changes one gate's model). Omit for read-only operation
-                    (the safe default; a misaligned agent can't change
-                    resources).
-  --help, -h        Show this message.
-
-Environment:
-  VERLON_API_KEY    Required. The API key the server authenticates with.
-  VERLON_BASE_URL   Optional. Defaults to https://api.verlon.ai. Use to
-                    target a self-hosted Verlon instance.
-
-This server speaks the Model Context Protocol over stdio. It is intended to
-be spawned as a subprocess by an MCP client (Claude Code, Cursor, Cline,
-etc.). See https://docs.verlon.ai for install snippets.
-`
-  );
-}
-
-const args = parseArgs(process.argv.slice(2));
-
-if (args.help) {
-  printHelp();
-  process.exit(0);
-}
-
-runStdio({ enableWrites: args.enableWrites }).catch((err) => {
-  const message = err instanceof Error ? err.message : String(err);
-  process.stderr.write(`fatal: ${message}\n`);
-  process.exit(1);
-});
+/**
+ * The library entry: build the Verlon MCP server to host it yourself.
+ * The `verlon-mcp` binary (`src/bin.ts`) runs it over stdio.
+ *
+ * `VerlonAdmin` is the admin client class these tools use, re-exported so
+ * a host's `client` factory builds exactly this one (two copies of the
+ * package are different classes to TypeScript).
+ */
+export {
+  createServer,
+  runStdio,
+  VERLON_MCP_VERSION,
+  type ServerOptions,
+} from './server.js';
+export { type ClientFor, MissingAuthError } from './lib/client.js';
+export { VerlonAdmin } from '@verlon-ai/admin';

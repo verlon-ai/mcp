@@ -22,7 +22,7 @@
     "LICENSE"
   ],
   "bin": {
-    "verlon-mcp": "./dist/index.js"
+    "verlon-mcp": "./dist/bin.js"
   },
   "exports": {
     ".": {

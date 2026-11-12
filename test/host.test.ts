@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createServer } from '../src/server.js';
-import type { ClientFor } from '../src/lib/client.js';
+import { createServer, type ClientFor } from '../src/index.js';
 
 interface ToolResult {
   content: Array<{ type: string; text: string }>;
@@ -88,5 +87,14 @@ describe('a host supplying the client per call', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.staging.test/v1/registry'
     );
+  });
+
+  it('importing the library starts no stdio server', async () => {
+    const write = vi.spyOn(process.stderr, 'write');
+    await import('../src/index.js');
+    expect(
+      write.mock.calls.some((c) => String(c[0]).includes('listening on stdio'))
+    ).toBe(false);
+    write.mockRestore();
   });
 });
