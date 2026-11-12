@@ -1,9 +1,9 @@
 {
   "name": "@verlon-ai/mcp",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "mcpName": "ai.verlon/mcp",
   "type": "module",
-  "description": "Model Context Protocol server for Verlon AI. Exposes gates, logs, recommendations, and experiments as MCP tools so coding agents (Claude Code, Cursor, Cline, any MCP-compatible client) can inspect and manage Verlon resources natively. Read-only by default; write tools require explicit --enable-writes opt-in. Agent integration protocol: https://verlon.ai/AGENTS.md",
+  "description": "Model Context Protocol server for Verlon AI. Exposes gates, logs and models as MCP tools so coding agents (Claude Code, Cursor, Cline, any MCP-compatible client) can inspect and manage Verlon resources natively. Read-only by default; write tools require explicit --enable-writes opt-in. Agent integration protocol: https://verlon.ai/AGENTS.md",
   "publishConfig": {
     "access": "public"
   },
