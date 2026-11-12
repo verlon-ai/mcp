@@ -89,6 +89,28 @@ The default tool set is **read-only** — see [Security note](#security-note) fo
 | `--enable-writes` | Register write-capable tools (`switch_model` today). Default is read-only — a misaligned agent can't accidentally destroy resources. |
 | `--help`, `-h` | Print usage. |
 
+## Hosting it yourself
+
+The package is also a library. `createServer` builds the same server without starting stdio, so a host can serve it over HTTP. A host serving many people passes `client`, which builds the admin client for each tool call from that call's request. Each call then acts as the person who made it, with that person's own key, and no key is read from the environment.
+
+```ts
+import { createServer, VerlonAdmin } from '@verlon-ai/mcp';
+
+const server = createServer({
+  client: (extra) => {
+    const auth = (extra as { requestInfo?: { headers: Record<string, string> } })
+      .requestInfo?.headers.authorization ?? '';
+    return new VerlonAdmin({
+      apiKey: auth.replace(/^Bearer\s+/i, ''),
+      baseUrl: 'https://api.verlon.ai',
+    });
+  },
+  baseUrl: () => 'https://api.verlon.ai', // for the keyless list_models
+});
+```
+
+Build the client with the `VerlonAdmin` this package exports. A second copy of `@verlon-ai/admin` is a different class to TypeScript.
+
 ## Security note
 
 Read-only by default is a deliberate choice. The MCP client (Claude Code, Cursor, etc.) sees this server's tools and may invoke them autonomously when a user's request makes them seem relevant. A read-only default means even a misaligned agent can only inspect your account, not modify it. Opt in to write tools (`--enable-writes`) only after you understand the implications. The only write tool today is `switch_model`, deliberately the narrowest possible first write: one reversible field on one gate. Creating, updating, or deleting resources is not yet exposed.
