@@ -34,3 +34,19 @@ export function createAdminClient(): VerlonAdmin {
   const baseUrl = process.env.VERLON_BASE_URL || DEFAULT_BASE_URL;
   return new VerlonAdmin({ apiKey, baseUrl });
 }
+
+/**
+ * How a tool gets its client for one call. The default reads the process
+ * environment (one key per server process: the npm `verlon-mcp` binary).
+ * A host serving many people, like Verlon's own MCP gateway, passes a
+ * factory that builds the client for the person behind each call, from
+ * that call's request (`extra.requestInfo`).
+ */
+export type ClientFor = (extra: unknown) => VerlonAdmin;
+
+export const envClient: ClientFor = () => createAdminClient();
+
+/** The API base URL the public, keyless tools (`list_models`) read. */
+export function envBaseUrl(): string {
+  return process.env.VERLON_BASE_URL || DEFAULT_BASE_URL;
+}

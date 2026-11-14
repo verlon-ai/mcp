@@ -6,7 +6,7 @@
 
 Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (gates, logs, models) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
 
-**Status:** 0.5.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 4 read-only tools (`list_gates`, `get_gate`, `list_logs`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`. The broader write surface (`create_gate`, `update_gate`, `run_chat`) lands in a future release behind the same flag.
+**Status:** 0.6.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 4 read-only tools (`list_gates`, `get_gate`, `list_logs`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`. The broader write surface (`create_gate`, `update_gate`, `run_chat`) lands in a future release behind the same flag.
 
 ## Install
 
@@ -88,6 +88,28 @@ The default tool set is **read-only** — see [Security note](#security-note) fo
 |---|---|
 | `--enable-writes` | Register write-capable tools (`switch_model` today). Default is read-only — a misaligned agent can't accidentally destroy resources. |
 | `--help`, `-h` | Print usage. |
+
+## Hosting it yourself
+
+The package is also a library. `createServer` builds the same server without starting stdio, so a host can serve it over HTTP. A host serving many people passes `client`, which builds the admin client for each tool call from that call's request. Each call then acts as the person who made it, with that person's own key, and no key is read from the environment.
+
+```ts
+import { createServer, VerlonAdmin } from '@verlon-ai/mcp';
+
+const server = createServer({
+  client: (extra) => {
+    const auth = (extra as { requestInfo?: { headers: Record<string, string> } })
+      .requestInfo?.headers.authorization ?? '';
+    return new VerlonAdmin({
+      apiKey: auth.replace(/^Bearer\s+/i, ''),
+      baseUrl: 'https://api.verlon.ai',
+    });
+  },
+  baseUrl: () => 'https://api.verlon.ai', // for the keyless list_models
+});
+```
+
+Build the client with the `VerlonAdmin` this package exports. A second copy of `@verlon-ai/admin` is a different class to TypeScript.
 
 ## Security note
 

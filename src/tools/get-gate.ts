@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { createAdminClient } from '../lib/client.js';
+import { envClient, type ClientFor } from '../lib/client.js';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,7 +15,10 @@ const getGateInputSchema = { gateId: z.string() };
  * API failures surface as `isError: true` per SEP-1303 so the calling
  * model can self-correct.
  */
-export function registerGetGate(server: McpServer): void {
+export function registerGetGate(
+  server: McpServer,
+  client: ClientFor = envClient
+): void {
   // Cast through `unknown` works around an SDK type-inference issue
   // (TS2589 "Type instantiation is excessively deep") that triggers
   // when a non-empty `inputSchema` is combined with the SDK's union
@@ -36,7 +39,7 @@ export function registerGetGate(server: McpServer): void {
         openWorldHint: true,
       },
     },
-    async ({ gateId }: { gateId: string }) => {
+    async ({ gateId }: { gateId: string }, extra: unknown) => {
       if (!UUID_RE.test(gateId)) {
         return {
           isError: true,
@@ -49,7 +52,7 @@ export function registerGetGate(server: McpServer): void {
         };
       }
       try {
-        const admin = createAdminClient();
+        const admin = client(extra);
         const gate = await admin.gates.get(gateId);
         return {
           content: [
