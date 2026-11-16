@@ -57,7 +57,6 @@
   "homepage": "https://verlon.ai",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@verlon-ai/admin": "^1.2.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

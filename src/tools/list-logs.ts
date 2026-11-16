@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { VerlonApi } from '../lib/api.js';
 import { envClient, type ClientFor } from '../lib/client.js';
 
 const DEFAULT_LIMIT = 20;
@@ -50,8 +51,8 @@ export function registerListLogs(
       const { gate, since, success, limit } = args;
       const effectiveLimit = limit ?? DEFAULT_LIMIT;
       try {
-        const admin = client(extra);
-        const logs = await admin.logs.list({
+        const api = new VerlonApi(client(extra));
+        const logs = await api.logs.list({
           gate,
           since,
           success,

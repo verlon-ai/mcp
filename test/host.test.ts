@@ -26,23 +26,26 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('a host supplying the client per call', () => {
-  it('each call gets the client for its own request, with no key in the environment', async () => {
+describe('a host supplying the credentials per call', () => {
+  it('each call runs with its own request’s credentials, with no key in the environment', async () => {
     delete process.env.VERLON_API_KEY;
-    const seen: string[] = [];
-    const client: ClientFor = (extra) => {
-      const auth = (
+    const sent: Array<{ url: string; auth: string }> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        const auth = (init.headers as Record<string, string>).authorization;
+        sent.push({ url, auth });
+        return url.endsWith('/v1/gates')
+          ? Response.json([{ id: `gate-of-${auth}`, name: 'g' }])
+          : Response.json({ id: url.split('/').pop(), name: 'g', owner: auth });
+      })
+    );
+    const client: ClientFor = (extra) => ({
+      apiKey: (
         extra as { requestInfo: { headers: Record<string, string> } }
-      ).requestInfo.headers.authorization;
-      seen.push(auth);
-      return {
-        gates: {
-          list: async () => [{ id: `gate-of-${auth}`, name: 'g' }],
-          get: async (id: string) => ({ id, owner: auth }),
-        },
-        logs: { list: async () => ({ logs: [], total: 0 }) },
-      } as unknown as ReturnType<ClientFor>;
-    };
+      ).requestInfo.headers.authorization.replace('Bearer ', ''),
+      baseUrl: 'https://api.host.test',
+    });
     const tools = handlers(createServer({ client }));
 
     const a = await tools.list_gates.handler({}, call('Bearer key-a'));
@@ -56,25 +59,26 @@ describe('a host supplying the client per call', () => {
       call('Bearer key-a')
     );
     expect(g.content[0].text).toContain('"owner": "Bearer key-a"');
-    expect(seen).toEqual(['Bearer key-a', 'Bearer key-b', 'Bearer key-a']);
+    expect(sent).toEqual([
+      { url: 'https://api.host.test/v1/gates', auth: 'Bearer key-a' },
+      { url: 'https://api.host.test/v1/gates', auth: 'Bearer key-b' },
+      {
+        url: 'https://api.host.test/v1/gates/11111111-1111-1111-1111-111111111111',
+        auth: 'Bearer key-a',
+      },
+    ]);
   });
 
-  it('switch_model, registered with writes on, uses the host’s client too', async () => {
-    const used: string[] = [];
-    const client: ClientFor = () =>
-      ({
-        gates: {
-          list: async () => {
-            used.push('list');
-            return [];
-          },
-          get: async () => ({}),
-          update: async () => ({}),
-        },
-      }) as unknown as ReturnType<ClientFor>;
+  it('switch_model, registered with writes on, uses the host’s credentials too', async () => {
+    const fetchMock = vi.fn(async () => Response.json([]));
+    vi.stubGlobal('fetch', fetchMock);
+    const client: ClientFor = () => ({
+      apiKey: 'k',
+      baseUrl: 'https://api.host.test',
+    });
     const tools = handlers(createServer({ client, enableWrites: true }));
     await tools.switch_model.handler({ model: 'gpt-5.5' }, call('Bearer k'));
-    expect(used).toEqual(['list']);
+    expect(fetchMock.mock.calls[0]![0]).toBe('https://api.host.test/v1/gates');
   });
 
   it('list_models reads the registry from the host’s base URL', async () => {

@@ -1,4 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { VerlonApi } from '../lib/api.js';
 import { envClient, type ClientFor } from '../lib/client.js';
 
 /**
@@ -30,8 +31,8 @@ export function registerListGates(
     },
     async (_args: unknown, extra: unknown) => {
       try {
-        const admin = client(extra);
-        const gates = await admin.gates.list();
+        const api = new VerlonApi(client(extra));
+        const gates = await api.gates.list();
 
         const summary = gates.map((g) => ({
           id: g.id,

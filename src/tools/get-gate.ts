@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { VerlonApi } from '../lib/api.js';
 import { envClient, type ClientFor } from '../lib/client.js';
 
 const UUID_RE =
@@ -52,8 +53,8 @@ export function registerGetGate(
         };
       }
       try {
-        const admin = client(extra);
-        const gate = await admin.gates.get(gateId);
+        const api = new VerlonApi(client(extra));
+        const gate = await api.gates.get(gateId);
         return {
           content: [
             {

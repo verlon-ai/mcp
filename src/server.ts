@@ -17,7 +17,7 @@ export interface ServerOptions {
    */
   enableWrites?: boolean;
   /**
-   * The admin client for one tool call. Default: from the process
+   * The credentials for one tool call. Default: from the process
    * environment (`VERLON_API_KEY`, `VERLON_BASE_URL`). A host serving
    * many people passes one built from each call's request.
    */

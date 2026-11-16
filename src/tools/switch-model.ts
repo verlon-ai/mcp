@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { VerlonApi } from '../lib/api.js';
 import { envClient, type ClientFor } from '../lib/client.js';
 
 const UUID_RE =
@@ -58,11 +59,11 @@ export function registerSwitchModel(
         );
       }
       try {
-        const admin = client(extra);
+        const api = new VerlonApi(client(extra));
 
         let targetId = gateId;
         if (!targetId) {
-          const gates = (await admin.gates.list()) as ConnectorGate[];
+          const gates = (await api.gates.list()) as ConnectorGate[];
           const connectors = gates.filter(
             (g) => g.connector === 'claude-code'
           );
@@ -82,13 +83,13 @@ export function registerSwitchModel(
           targetId = connectors[0].id;
         }
 
-        const before = (await admin.gates.get(targetId)) as ConnectorGate;
+        const before = (await api.gates.get(targetId)) as ConnectorGate;
         if (before.model === model) {
           return textResult(
             `Gate "${before.name}" already routes to ${model} — nothing changed.`
           );
         }
-        const after = (await admin.gates.update(targetId, {
+        const after = (await api.gates.update(targetId, {
           model,
         } as never)) as ConnectorGate;
         return textResult(

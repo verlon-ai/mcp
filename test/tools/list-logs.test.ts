@@ -4,8 +4,9 @@ import { registerListLogs } from '../../src/tools/list-logs.js';
 
 const { logsList } = vi.hoisted(() => ({ logsList: vi.fn() }));
 
-vi.mock('@verlon-ai/admin', () => ({
-  VerlonAdmin: class MockVerlonAdmin {
+vi.mock('../../src/lib/api.js', async (orig) => ({
+  ...(await orig<typeof import('../../src/lib/api.js')>()),
+  VerlonApi: class MockVerlonApi {
     logs = { list: logsList };
   },
 }));
