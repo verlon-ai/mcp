@@ -4,8 +4,9 @@ import { registerGetGate } from '../../src/tools/get-gate.js';
 
 const { gatesGet } = vi.hoisted(() => ({ gatesGet: vi.fn() }));
 
-vi.mock('@verlon-ai/admin', () => ({
-  VerlonAdmin: class MockVerlonAdmin {
+vi.mock('../../src/lib/api.js', async (orig) => ({
+  ...(await orig<typeof import('../../src/lib/api.js')>()),
+  VerlonApi: class MockVerlonApi {
     gates = { get: gatesGet };
   },
 }));

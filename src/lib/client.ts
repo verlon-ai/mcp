@@ -1,9 +1,7 @@
-import { VerlonAdmin } from '@verlon-ai/admin';
-
-const DEFAULT_BASE_URL = 'https://api.verlon.ai';
+import { DEFAULT_BASE_URL, type VerlonCredentials } from './api.js';
 
 /**
- * Thrown when MCP tool handlers can't construct the admin client because
+ * Thrown when MCP tool handlers have no credentials because
  * required auth env vars are missing. Distinct from generic Errors so the
  * tool handler can surface a targeted `isError` result with the recovery
  * hint (which env var to set in the MCP client config).
@@ -19,32 +17,30 @@ export class MissingAuthError extends Error {
 }
 
 /**
- * Build a `VerlonAdmin` client from the process environment. Mirrors
- * the CLI's `getVerlonClient` precedence rules but skips the saved-profile
- * fallback — MCP servers run as a spawned subprocess and only see env
- * vars passed in by the MCP client config (e.g. Claude Code's
- * `mcpServers.*.env`), so there's no human-interactive `verlon login`
- * profile to fall back on.
+ * The credentials in the process environment. MCP servers run as a
+ * spawned subprocess and only see env vars passed in by the MCP client
+ * config (e.g. Claude Code's `mcpServers.*.env`), so there's no
+ * `verlon login` profile to fall back on.
  */
-export function createAdminClient(): VerlonAdmin {
+export function envCredentials(): VerlonCredentials {
   const apiKey = process.env.VERLON_API_KEY;
   if (!apiKey) {
     throw new MissingAuthError();
   }
-  const baseUrl = process.env.VERLON_BASE_URL || DEFAULT_BASE_URL;
-  return new VerlonAdmin({ apiKey, baseUrl });
+  return { apiKey, baseUrl: process.env.VERLON_BASE_URL || DEFAULT_BASE_URL };
 }
 
 /**
- * How a tool gets its client for one call. The default reads the process
+ * Whose credentials a tool call runs with. The default reads the process
  * environment (one key per server process: the npm `verlon-mcp` binary).
  * A host serving many people, like Verlon's own MCP gateway, passes a
- * factory that builds the client for the person behind each call, from
- * that call's request (`extra.requestInfo`).
+ * function that returns the credentials of the person behind each call,
+ * from that call's request (`extra.requestInfo`). A host needs no client
+ * package: the tools make their own requests.
  */
-export type ClientFor = (extra: unknown) => VerlonAdmin;
+export type ClientFor = (extra: unknown) => VerlonCredentials;
 
-export const envClient: ClientFor = () => createAdminClient();
+export const envClient: ClientFor = () => envCredentials();
 
 /** The API base URL the public, keyless tools (`list_models`) read. */
 export function envBaseUrl(): string {
