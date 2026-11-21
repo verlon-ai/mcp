@@ -13,16 +13,21 @@ const toolNames = (enableWrites: boolean) =>
 describe('the tools the server offers', () => {
   it('read-only by default', () => {
     expect(toolNames(false)).toEqual([
+      'get_endpoint',
       'get_gate',
+      'list_endpoints',
       'list_gates',
       'list_logs',
       'list_models',
     ]);
   });
 
-  it('adds switch_model with --enable-writes', () => {
+  it('adds switch_model and create_endpoint with --enable-writes', () => {
     expect(toolNames(true)).toEqual([
+      'create_endpoint',
+      'get_endpoint',
       'get_gate',
+      'list_endpoints',
       'list_gates',
       'list_logs',
       'list_models',

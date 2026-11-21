@@ -16,10 +16,10 @@ Usage:
   verlon-mcp [--enable-writes]
 
 Flags:
-  --enable-writes   Register the write tools (today switch_model, which
-                    changes one gate's model). Omit for read-only operation
-                    (the safe default; a misaligned agent can't change
-                    resources).
+  --enable-writes   Register the write tools: switch_model (changes one
+                    gate's model) and create_endpoint (adds an endpoint).
+                    Omit for read-only operation (the safe default; a
+                    misaligned agent can't change resources).
   --help, -h        Show this message.
 
 Environment:
