@@ -15,12 +15,20 @@ export const DEFAULT_BASE_URL = 'https://api.verlon.ai';
 export class VerlonApiError extends Error {
   readonly status: number;
   readonly code: string;
+  /** The API's own `details`: a refused name's `reason` and `suggestion`. */
+  readonly details?: Record<string, unknown>;
 
-  constructor(status: number, code: string, message: string) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    details?: Record<string, unknown>
+  ) {
     super(message);
     this.name = 'VerlonApiError';
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -47,9 +55,19 @@ export class VerlonApi {
   }
 
   readonly gates = {
-    list: () => this.request<Gate[]>('GET', '/v1/gates'),
+    list: (projectId?: string) =>
+      this.request<Gate[]>(
+        'GET',
+        projectId
+          ? `/v1/gates?projectId=${encodeURIComponent(projectId)}`
+          : '/v1/gates'
+      ),
     get: (id: string) =>
       this.request<Gate>('GET', `/v1/gates/${encodeURIComponent(id)}`),
+    getByName: (name: string) =>
+      this.request<Gate>('GET', `/v1/gates/name/${encodeURIComponent(name)}`),
+    create: (body: Record<string, unknown>) =>
+      this.request<Gate>('POST', '/v1/gates', body),
     /** PATCH answers `{ gate, hasChanges, changedFields }`; the gate. */
     update: async (id: string, data: Record<string, unknown>) =>
       (
@@ -80,6 +98,27 @@ export class VerlonApi {
     },
   };
 
+  /** The models Verlon serves now (`GET /v1/registry`: available and not
+   * deprecated), by id, with each one's type (chat, embeddings, image…). */
+  async modelTypes(): Promise<Record<string, string>> {
+    const { models } = await this.request<{
+      models?: Record<
+        string,
+        { type?: string; isAvailable?: boolean; deprecated?: boolean }
+      >;
+    }>('GET', '/v1/registry');
+    return Object.fromEntries(
+      Object.entries(models ?? {})
+        .filter(
+          ([, m]) =>
+            typeof m.type === 'string' &&
+            m.isAvailable !== false &&
+            m.deprecated !== true
+        )
+        .map(([id, m]) => [id, m.type as string])
+    );
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -102,13 +141,21 @@ export class VerlonApi {
       // not JSON: reported below with the status
     }
     if (!res.ok) {
-      const e = (data ?? {}) as { error?: unknown; message?: unknown };
+      const e = (data ?? {}) as {
+        error?: unknown;
+        message?: unknown;
+        details?: unknown;
+      };
       const code = typeof e.error === 'string' ? e.error : 'unknown_error';
       const message =
         (typeof e.message === 'string' && e.message) ||
         (typeof e.error === 'string' && e.error) ||
         `Request failed with ${res.status}`;
-      throw new VerlonApiError(res.status, code, message);
+      const details =
+        typeof e.details === 'object' && e.details !== null
+          ? (e.details as Record<string, unknown>)
+          : undefined;
+      throw new VerlonApiError(res.status, code, message, details);
     }
     return data as T;
   }
