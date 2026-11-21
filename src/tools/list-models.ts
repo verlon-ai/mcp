@@ -1,10 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { envBaseUrl } from '../lib/client.js';
+import { ENDPOINT_TYPES } from '../lib/endpoints.js';
 
 
 const listModelsInputSchema = {
   provider: z.string().optional(),
+  type: z.enum(ENDPOINT_TYPES).optional(),
 };
 
 interface RegistryModel {
@@ -17,9 +19,10 @@ interface RegistryModel {
 }
 
 /**
- * Register the `list_models` tool — the chat models a gate can route
- * to, from the live registry (public endpoint, no auth). Companion to
- * `switch_model`: the calling model uses this to name a valid id.
+ * Register the `list_models` tool — the models Verlon serves, of one
+ * type (chat by default), from the live registry (public endpoint, no
+ * auth). The calling model uses it to name a valid id for
+ * `create_endpoint` or `switch_model`.
  */
 export function registerListModels(
   server: McpServer,
@@ -31,16 +34,23 @@ export function registerListModels(
     {
       title: 'List Routable Models',
       description:
-        'List the chat models a Verlon gate can route to, with live ' +
-        'pricing (USD per 1M tokens) and capability scores. Optionally ' +
-        'filter by provider (openai, anthropic, google, mistral). Read-only.',
+        'List the models Verlon serves, with live pricing (USD per 1M ' +
+        'tokens) and capability scores. Chat models unless type names ' +
+        'another (embeddings, image, …). Optionally filter by provider ' +
+        '(openai, anthropic, google, mistral). Read-only.',
       inputSchema: listModelsInputSchema,
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
       },
     },
-    async ({ provider }: { provider?: string }) => {
+    async ({
+      provider,
+      type = 'chat',
+    }: {
+      provider?: string;
+      type?: string;
+    }) => {
       const baseUrl = baseUrlFor().replace(/\/+$/, '');
       try {
         const res = await fetch(`${baseUrl}/v1/registry`);
@@ -52,7 +62,7 @@ export function registerListModels(
         const models = Object.entries(payload.models ?? {})
           .filter(
             ([, m]) =>
-              m.type === 'chat' &&
+              m.type === type &&
               m.isAvailable !== false &&
               m.deprecated !== true &&
               (!filter || m.provider?.toLowerCase() === filter)

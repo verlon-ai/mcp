@@ -10,7 +10,7 @@ interface ToolResult {
 interface RegisteredTool {
   annotations?: { readOnlyHint?: boolean };
   handler: (
-    args: { provider?: string },
+    args: { provider?: string; type?: string },
     extra: unknown
   ) => Promise<ToolResult>;
 }
@@ -87,6 +87,14 @@ describe('list_models tool', () => {
     }>;
     expect(models).toHaveLength(1);
     expect(models[0].id).toBe('gemini-2.5-flash');
+  });
+
+  it('lists another type when asked', async () => {
+    const result = await getListModels().handler({ type: 'image' }, {});
+    const models = JSON.parse(result.content[0].text) as Array<{
+      id: string;
+    }>;
+    expect(models.map((m) => m.id)).toEqual(['dall-e-3']);
   });
 
   it('surfaces registry fetch failures as isError', async () => {
