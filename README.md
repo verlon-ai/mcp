@@ -4,9 +4,9 @@
 [![license](https://img.shields.io/npm/l/%40verlon-ai%2Fmcp)](./LICENSE)
 [![CI](https://github.com/verlon-ai/mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/verlon-ai/mcp/actions/workflows/ci.yml)
 
-Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (gates, logs, models) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
+Model Context Protocol server for [Verlon AI](https://verlon.ai). Exposes your Verlon resources (endpoints, logs, models) as MCP tools so coding agents — Claude Code, Cursor, Cline, any MCP-compatible client — can inspect and manage your AI infrastructure natively.
 
-**Status:** 0.6.0 — listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Ships 4 read-only tools (`list_gates`, `get_gate`, `list_logs`, `list_models`) plus one write tool, `switch_model`, registered only with `--enable-writes`.
+**Status:** listed in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `ai.verlon/mcp`. Read-only tools by default; the write tools (`create_endpoint`, `switch_model`) register only with `--enable-writes`.
 
 ## Install
 
@@ -30,7 +30,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-Then restart Claude Code. The `verlon` server should appear in the tools list, and Claude can call `verlon:list_gates` against your account.
+Then restart Claude Code. The `verlon` server should appear in the tools list, and Claude can call `verlon:list_endpoints` against your account.
 
 ### Cursor
 
@@ -60,15 +60,18 @@ The default tool set is **read-only** — see [Security note](#security-note) fo
 
 | Tool | Inputs | What it returns |
 |---|---|---|
+| `list_endpoints` | `projectId?` | The account's endpoints (the named model setups its code calls): id, name, description, taskType, model, projectId, createdAt |
+| `get_endpoint` | `name` | One endpoint by its name |
 | `list_gates` | _none_ | Every gate in the account — id, name, description, model, taskType, taskSubtype, createdAt |
 | `get_gate` | `gateId` (UUID) | Full gate config — model, fallback chain, task type, spending limits, sub-gates, orchestration |
 | `list_logs` | `gate?`, `since?` (ISO 8601), `success?`, `limit?` (1-100, default 20) | Recent request logs — timestamp, gate, model, cost, latency, success/failure |
-| `list_models` | `provider?` (`openai`, `anthropic`, `google`, `mistral`, …) | Chat models a gate can route to, with live pricing (USD per 1M tokens) and capability scores |
+| `list_models` | `type?` (`chat` by default, `embeddings`, `image`, `video`, `stt`, `tts`, `moderation`, `ocr`), `provider?` | The models Verlon serves, with live pricing (USD per 1M tokens) and capability scores |
 
 ### Write tools (`--enable-writes` only)
 
 | Tool | Inputs | What it does |
 |---|---|---|
+| `create_endpoint` | `name`, `model` (id from `list_models`), `type?`, `description?` | Creates an endpoint. The type defaults to the model's own type; a model of another type, or one Verlon doesn't serve, is refused before anything is created. The same call again returns the endpoint it made (`existing: true`). A taken or invalid name is refused with the API's message and a suggested name to retry with. |
 | `switch_model` | `model` (id from `list_models`), `gateId?` | Switches which model a coding gate routes to. Takes effect on the next turn of any running session, no restart. With `gateId` omitted, targets the account's Claude Code connector gate. Idempotent; the change is one reversible field. |
 
 ### Removed tools
@@ -86,7 +89,7 @@ The default tool set is **read-only** — see [Security note](#security-note) fo
 
 | Flag | Purpose |
 |---|---|
-| `--enable-writes` | Register write-capable tools (`switch_model` today). Default is read-only — a misaligned agent can't accidentally destroy resources. |
+| `--enable-writes` | Register the write tools (`create_endpoint`, `switch_model`). Default is read-only — a misaligned agent can't change resources. |
 | `--help`, `-h` | Print usage. |
 
 ## Hosting it yourself
@@ -111,7 +114,7 @@ const server = createServer({
 
 ## Security note
 
-Read-only by default is a deliberate choice. The MCP client (Claude Code, Cursor, etc.) sees this server's tools and may invoke them autonomously when a user's request makes them seem relevant. A read-only default means even a misaligned agent can only inspect your account, not modify it. Opt in to write tools (`--enable-writes`) only after you understand the implications. The only write tool today is `switch_model`, deliberately the narrowest possible first write: one reversible field on one gate. Creating, updating, or deleting resources is not yet exposed.
+Read-only by default is a deliberate choice. The MCP client (Claude Code, Cursor, etc.) sees this server's tools and may invoke them autonomously when a user's request makes them seem relevant. A read-only default means even a misaligned agent can only inspect your account, not modify it. Opt in to write tools (`--enable-writes`) only after you understand the implications. The write tools create or change; none deletes. `switch_model` changes one reversible field on one gate, and `create_endpoint` adds an endpoint (calling it again returns the same one). Updating or deleting endpoints is not exposed.
 
 ## Development
 
