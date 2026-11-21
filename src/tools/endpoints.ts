@@ -96,7 +96,9 @@ export function registerCreateEndpoint(
         'hyphens, e.g. "support-summarizer"). The type defaults to the ' +
         'model’s own type; call list_models for model ids. Calling it again ' +
         'with the same name, model and type returns the endpoint it made ' +
-        '(existing: true). A taken or invalid name is refused with a ' +
+        '(existing: true); its description is never overwritten, and ' +
+        'descriptionKept says when the one passed differs. A taken or ' +
+        'invalid name is refused with a ' +
         'suggested name to retry with.',
       inputSchema: {
         name: z.string(),

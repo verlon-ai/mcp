@@ -71,7 +71,7 @@ The default tool set is **read-only** — see [Security note](#security-note) fo
 
 | Tool | Inputs | What it does |
 |---|---|---|
-| `create_endpoint` | `name`, `model` (id from `list_models`), `type?`, `description?` | Creates an endpoint. The type defaults to the model's own type; a model of another type, or one Verlon doesn't serve, is refused before anything is created. The same call again returns the endpoint it made (`existing: true`). A taken or invalid name is refused with the API's message and a suggested name to retry with. |
+| `create_endpoint` | `name`, `model` (id from `list_models`), `type?`, `description?` | Creates an endpoint. The type defaults to the model's own type; a model of another type, or one Verlon doesn't serve, is refused before anything is created. The same call again returns the endpoint it made (`existing: true`); its description is never overwritten, and `descriptionKept` says when the one passed differs. A taken or invalid name is refused with the API's message and a suggested name to retry with. |
 | `switch_model` | `model` (id from `list_models`), `gateId?` | Switches which model a coding gate routes to. Takes effect on the next turn of any running session, no restart. With `gateId` omitted, targets the account's Claude Code connector gate. Idempotent; the change is one reversible field. |
 
 ### Removed tools

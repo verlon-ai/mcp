@@ -113,6 +113,14 @@ export interface CreateEndpointInput {
   description?: string;
 }
 
+export interface CreateEndpointResult {
+  endpoint: Endpoint;
+  existing: boolean;
+  /** On an existing endpoint, the description asked for that was not
+   * applied, because the endpoint already has another one. */
+  descriptionKept?: { stored: string | null; asked: string };
+}
+
 /**
  * Create an endpoint. The type defaults to the model's own type in
  * the registry; a model Verlon doesn't serve, or one of another type,
@@ -120,13 +128,15 @@ export interface CreateEndpointInput {
  *
  * The same create again returns the endpoint it made the first time
  * (`existing: true`), so an agent that re-runs its work doesn't fail
- * on its own earlier step. A taken name with a different setup is
+ * on its own earlier step. The stored description is never overwritten
+ * (someone may have edited it); when the one asked for differs,
+ * `descriptionKept` says so. A taken name with a different setup is
  * refused with the API's message and details unchanged.
  */
 export async function createEndpoint(
   api: EndpointsApi,
   input: CreateEndpointInput
-): Promise<{ endpoint: Endpoint; existing: boolean }> {
+): Promise<CreateEndpointResult> {
   if (
     input.type !== undefined &&
     !(ENDPOINT_TYPES as readonly string[]).includes(input.type)
@@ -172,7 +182,17 @@ export async function createEndpoint(
           : null
       )
       .catch(() => null);
-    if (same) return { endpoint: toEndpoint(same), existing: true };
-    throw err;
+    if (!same) throw err;
+    const endpoint = toEndpoint(same);
+    return input.description && input.description !== endpoint.description
+      ? {
+          endpoint,
+          existing: true,
+          descriptionKept: {
+            stored: endpoint.description,
+            asked: input.description,
+          },
+        }
+      : { endpoint, existing: true };
   }
 }

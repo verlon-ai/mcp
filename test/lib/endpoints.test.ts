@@ -139,6 +139,32 @@ describe('create', () => {
     });
   });
 
+  it('says when a re-run asked for another description, and leaves the stored one', async () => {
+    const { api } = fakeApi({
+      create: vi.fn(async () => {
+        throw taken();
+      }),
+      getByName: vi.fn(async () =>
+        gate({ name: 'summarizer', description: 'Summarizes tickets' })
+      ),
+    });
+    const changed = await createEndpoint(api, {
+      name: 'summarizer',
+      model: 'gpt-5.4-mini',
+      description: 'Summarizes tickets in one line',
+    });
+    expect(changed.descriptionKept).toEqual({
+      stored: 'Summarizes tickets',
+      asked: 'Summarizes tickets in one line',
+    });
+    const same = await createEndpoint(api, {
+      name: 'summarizer',
+      model: 'gpt-5.4-mini',
+      description: 'Summarizes tickets',
+    });
+    expect(same.descriptionKept).toBeUndefined();
+  });
+
   it('passes the refusal through when the name is taken by another setup', async () => {
     const refusal = taken({ reason: 'taken', suggestion: 'summarizer-2' });
     const { api } = fakeApi({
