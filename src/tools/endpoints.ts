@@ -94,8 +94,10 @@ export function registerCreateEndpoint(
         'Create an endpoint: a named model setup the code calls instead of ' +
         'a model id. Name it for its job (lowercase letters, digits and ' +
         'hyphens, e.g. "support-summarizer"). The type defaults to the ' +
-        'model’s own type; call list_models for model ids. Calling it again ' +
-        'with the same name, model and type returns the endpoint it made ' +
+        'model’s own type; call list_models for model ids. Pass lock to ' +
+        'serve exactly that model with no automatic changes. Calling it ' +
+        'again with the same name, model, type and lock returns the ' +
+        'endpoint it made ' +
         '(existing: true); its description is never overwritten, and ' +
         'descriptionKept says when the one passed differs. A taken or ' +
         'invalid name is refused with a ' +
@@ -108,6 +110,12 @@ export function registerCreateEndpoint(
           .string()
           .optional()
           .describe('What the endpoint does, in one sentence'),
+        lock: z
+          .boolean()
+          .optional()
+          .describe(
+            'Lock to this model: no automatic changes, and only the fallbacks listed'
+          ),
       },
       annotations: {
         readOnlyHint: false,
@@ -122,6 +130,7 @@ export function registerCreateEndpoint(
         model: string;
         type?: string;
         description?: string;
+        lock?: boolean;
       },
       extra: unknown
     ) => {

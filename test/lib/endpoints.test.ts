@@ -124,6 +124,45 @@ describe('create', () => {
     expect(created).toEqual([]);
   });
 
+  it('locks to the model only when asked, and counts the lock as part of the setup', async () => {
+    const { api, created } = fakeApi();
+    await createEndpoint(api, { name: 'a', model: 'gpt-5.4-mini', lock: true });
+    await createEndpoint(api, { name: 'b', model: 'gpt-5.4-mini' });
+    expect(created[0]).toMatchObject({ modelChoice: 'lock' });
+    expect(created[1]).not.toHaveProperty('modelChoice');
+
+    const refusal = taken();
+    const picked = fakeApi({
+      create: vi.fn(async () => {
+        throw refusal;
+      }),
+      getByName: vi.fn(async () => gate({ name: 'a' })),
+    });
+    await expect(
+      createEndpoint(picked.api, {
+        name: 'a',
+        model: 'gpt-5.4-mini',
+        lock: true,
+      })
+    ).rejects.toBe(refusal);
+    const locked = fakeApi({
+      create: vi.fn(async () => {
+        throw refusal;
+      }),
+      getByName: vi.fn(async () => gate({ name: 'a', modelChoice: 'lock' })),
+    });
+    await expect(
+      createEndpoint(locked.api, {
+        name: 'a',
+        model: 'gpt-5.4-mini',
+        lock: true,
+      })
+    ).resolves.toMatchObject({
+      existing: true,
+      endpoint: { modelChoice: 'lock' },
+    });
+  });
+
   it('returns the endpoint it made before when run again with the same setup', async () => {
     const { api } = fakeApi({
       create: vi.fn(async () => {

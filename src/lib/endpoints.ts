@@ -24,6 +24,9 @@ export interface Endpoint {
   description: string | null;
   taskType: string | null;
   model: string | null;
+  /** `pick`: the chosen model, with automatic fallbacks after the
+   * endpoint's own. `lock`: exactly `model`, only the fallbacks listed. */
+  modelChoice: 'pick' | 'lock';
   projectId: string | null;
   createdAt: string | null;
 }
@@ -69,6 +72,7 @@ export function toEndpoint(g: Gate): Endpoint {
     description: str(g.description),
     taskType: str(g.taskType),
     model: str(g.model),
+    modelChoice: g.modelChoice === 'lock' ? 'lock' : 'pick',
     projectId: str(g.projectId),
     createdAt: created instanceof Date ? created.toISOString() : str(created),
   };
@@ -111,6 +115,8 @@ export interface CreateEndpointInput {
   model: string;
   type?: string;
   description?: string;
+  /** Lock to the model: no automatic changes or fallbacks. */
+  lock?: boolean;
 }
 
 export interface CreateEndpointResult {
@@ -126,7 +132,7 @@ export interface CreateEndpointResult {
  * the registry; a model Verlon doesn't serve, or one of another type,
  * is refused before anything is created.
  *
- * The same create again returns the endpoint it made the first time
+ * The same create again (same name, model, type and lock) returns the endpoint it made the first time
  * (`existing: true`), so an agent that re-runs its work doesn't fail
  * on its own earlier step. The stored description is never overwritten
  * (someone may have edited it); when the one asked for differs,
@@ -164,6 +170,8 @@ export async function createEndpoint(
     taskType,
   };
   if (input.description) body.description = input.description;
+  if (input.lock) body.modelChoice = 'lock';
+  const modelChoice = input.lock ? 'lock' : 'pick';
 
   try {
     return {
@@ -177,7 +185,8 @@ export async function createEndpoint(
       .then((g) =>
         isListedEndpoint(g) &&
         g.model === input.model &&
-        g.taskType === taskType
+        g.taskType === taskType &&
+        (g.modelChoice === 'lock' ? 'lock' : 'pick') === modelChoice
           ? g
           : null
       )
