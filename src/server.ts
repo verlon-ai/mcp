@@ -11,7 +11,7 @@ import {
 } from './tools/endpoints.js';
 import { envBaseUrl, envClient, type ClientFor } from './lib/client.js';
 
-export const VERLON_MCP_VERSION = '0.7.0';
+export const VERLON_MCP_VERSION = '0.8.0';
 
 export interface ServerOptions {
   /**
